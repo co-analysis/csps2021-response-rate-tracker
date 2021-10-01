@@ -1,0 +1,73 @@
+---
+title: "Responses over time"
+date: 2021-01-01
+weight: 200
+summary: "Civil Service response rate over time"
+draft: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+suppressPackageStartupMessages(library(tidyverse))
+
+data_dir <- file.path(dirname(getwd()), "data")
+
+csps2021_rr <- readr::read_csv(file.path(data_dir, "total_responses_2021.csv")) %>%
+  rename(date_2021 = end_date)
+
+csps2020_rr <- readr::read_csv(file.path(data_dir, "total_responses_2020.csv"))
+
+day_compare <- tibble::tibble(
+    day = 1:37,
+    date_2021 = as.Date("2021-09-28") + 0:36
+  ) %>% 
+  left_join(csps2021_rr, by = "date_2021") %>%
+  left_join(csps2020_rr, by = "day") %>%
+  select(day, date_2021, n_2021 = cumulative, rr_2021 = rr, n_2020, rr_2020)
+
+```
+
+
+```{r rate-graph}
+rate_data <- day_compare %>%
+  select(date_2021, rr_2021, rr_2020) %>%
+  pivot_longer(cols = c(rr_2021, rr_2020), names_to = "year", values_to = "rr") %>%
+  mutate(year = factor(paste("CSPS", str_remove_all(year, "\\D+")), levels = c("CSPS 2021", "CSPS 2020"), ordered = TRUE))
+
+latest_data <- day_compare %>%
+  filter(!is.na(rr_2021)) %>%
+  filter(day == max(day)) %>%
+  select(date_2021, rr_2021, rr_2020) %>%
+  pivot_longer(cols = c(rr_2021, rr_2020), names_to = "year", values_to = "rr") %>%
+  mutate(year = factor(paste("CSPS", str_remove_all(year, "\\D+")), levels = c("CSPS 2021", "CSPS 2020"), ordered = TRUE))
+
+ggplot(rate_data, aes(x = date_2021, y = rr, colour = year, size = year, group = year)) +
+  geom_line() +
+  geom_point(data = latest_data, size = 1, show.legend = FALSE) +
+  scale_size_manual(
+    values = c("CSPS 2020" = 0.5, "CSPS 2021" = 1.5)
+  ) +
+  scale_colour_manual(
+    values = c("CSPS 2020" = "grey70", "CSPS 2021" = "#005abb")
+  ) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     breaks = seq(0, 0.7, 0.1),
+                     limits = c(0, 0.7)) +
+  scale_x_date(
+    breaks = as.Date("2021-09-27") + c(1, 7, 14, 21, 28, 35, 37),
+    minor_breaks = as.Date("2021-09-27") + 0:37,
+    labels = scales::date_format(format = "%a %d-%b"),
+    expand = expansion(add = 2)) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 90),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    legend.position = "top",
+    legend.title = element_blank()
+  )
+
+```
