@@ -60,7 +60,7 @@ rr_time <- data %>%
                              end_date)) %>%
   count(end_date, name = "daily") %>%
   mutate(cumulative = cumsum(daily),
-         hc = sum(rr_org$hc),
+         hc = sum(rr_org$hc, na.rm = TRUE),
          rr = cumulative/hc)
 
 # write org counts
