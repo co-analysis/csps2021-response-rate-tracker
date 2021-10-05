@@ -44,6 +44,7 @@ rr_org <- data %>%
   filter(Finished & EndDate < Sys.Date()) %>%
   mutate(OUcode = case_when(
     ParentOrgCode == "HMICFRS" ~ "HMICFR0000",
+    ParentOrgCode == "HMPPS0000" ~ "HMPPHQ0000",
     TRUE ~ toupper(ParentOrgCode)
   )) %>%
   mutate(org = str_remove_all(OUcode, "\\d+")) %>%
