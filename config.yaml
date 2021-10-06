@@ -1,9 +1,10 @@
-baseURL: https://co-analysis.github.io/govuk-hugo-demo/
+baseURL: https://co-analysis.github.io/csps2021-response-rate-tracker/
 languageCode: en-gb
 title: "CSPS 2021 Response Rates"
 theme: govukhugo
 publishDir: docs
 canonifyurls: true
+disableKinds: ["taxonomy", "term"]
 
 pygmentsUseClasses: true
 
@@ -29,6 +30,5 @@ params:
   govuk: false
   logotext: CSPS21
   product: "Civil Service People Survey 2021 Response Rates"
-  feedbackurl: https://github.com/co-analysis/govuk-hugo-demo/issues/
   builtby: "Cabinet Office Analysis & Insight"
   builtbyurl: https://www.github.com/co-analysis
