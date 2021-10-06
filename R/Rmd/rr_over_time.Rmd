@@ -1,17 +1,16 @@
 ---
-title: "Responses over time"
+title: "CSPS 2021 response rate over time"
 date: 2021-01-01
 weight: 200
 summary: "Civil Service response rate over time"
-draft: true
 ---
-
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 suppressPackageStartupMessages(library(tidyverse))
 
 data_dir <- file.path(dirname(getwd()), "data")
+hc_dt <- as.POSIXct(readLines(file.path(data_dir, "headcount_timestamp.txt")))
 
 csps2021_rr <- readr::read_csv(file.path(data_dir, "total_responses_2021.csv")) %>%
   rename(date_2021 = end_date)
@@ -26,41 +25,94 @@ day_compare <- tibble::tibble(
   left_join(csps2020_rr, by = "day") %>%
   select(day, date_2021, n_2021 = cumulative, rr_2021 = rr, n_2020, rr_2020)
 
+latest_day <- day_compare %>%
+  drop_na(rr_2021) %>%
+  filter(day == max(day))
+
 ```
 
+`r format(latest_day$date_2021, "%A %d %B %Y")` was day `r latest_day$day` of the 2021 Civil Service People Survey, as at 23:59 on `r format(latest_day$date_2021, "%d-%b-%Y")` the overall response rate was `r scales::percent(latest_day$rr_2021, accuracy = 0.1)`. On the equivalent day in the 2020 survey the response rate was `r scales::percent(latest_day$rr_2020, accuracy = 0.1)`. The graph and table below shows the overall Civil Service response rate over time for 2020 and 2021.
 
-```{r rate-graph}
+Please note that rates for a given fieldwork day in the two years might not be directly comparable for a number of reasons, including: different start dates for the survey overall; different start dates in different departments and agencies; and, the relative position of weekends. The 2021 survey will also run for two additional working days compared to the 2020 survey.
+
+
+```{r rate-graph, warning=FALSE}
 rate_data <- day_compare %>%
   select(date_2021, rr_2021, rr_2020) %>%
   pivot_longer(cols = c(rr_2021, rr_2020), names_to = "year", values_to = "rr") %>%
-  mutate(year = factor(paste("CSPS", str_remove_all(year, "\\D+")), levels = c("CSPS 2021", "CSPS 2020"), ordered = TRUE))
+  mutate(
+    year = factor(paste("CSPS", str_remove_all(year, "\\D+")), 
+                  levels = c("CSPS 2020", "CSPS 2021"), ordered = TRUE),
+    date_2021 = as.POSIXct(date_2021))
 
-latest_data <- day_compare %>%
+latest_graph_data <- day_compare %>%
   filter(!is.na(rr_2021)) %>%
   filter(day == max(day)) %>%
-  select(date_2021, rr_2021, rr_2020) %>%
+  mutate(higher = rr_2021 > rr_2020) %>%
+  select(date_2021, day, rr_2021, rr_2020, higher) %>%
   pivot_longer(cols = c(rr_2021, rr_2020), names_to = "year", values_to = "rr") %>%
-  mutate(year = factor(paste("CSPS", str_remove_all(year, "\\D+")), levels = c("CSPS 2021", "CSPS 2020"), ordered = TRUE))
+  mutate(
+    year = factor(paste("CSPS", str_remove_all(year, "\\D+")), 
+                  levels = c("CSPS 2020", "CSPS 2021"), ordered = TRUE),
+    date_2021 = as.POSIXct(date_2021),
+    point_size = if_else(year == "CSPS 2021", 2, 1),
+    label = paste0(year, "\nDay ", day, ": ", 
+                   scales::percent(rr, accuracy = 0.1)),
+    label_x = case_when(
+      year == "CSPS 2020" & higher ~ as.POSIXct(date_2021 + (6 * 60 * 60)),
+      year == "CSPS 2021" & higher ~ as.POSIXct(date_2021 - (6 * 60 * 60)),
+      year == "CSPS 2020" & !higher ~ as.POSIXct(date_2021 - (6 * 60 * 60)),
+      year == "CSPS 2021" & !higher ~ as.POSIXct(date_2021 + (6 * 60 * 60))
+    ),
+    label_hjust = case_when(
+      year == "CSPS 2020" & higher ~ 0,
+      year == "CSPS 2021" & higher ~ 1,
+      year == "CSPS 2020" & !higher ~ 1,
+      year == "CSPS 2021" & !higher ~ 0
+    ),
+    label_vjust = case_when(
+      year == "CSPS 2020" & higher ~ 1,
+      year == "CSPS 2021" & higher ~ 0,
+      year == "CSPS 2020" & !higher ~ 0,
+      year == "CSPS 2021" & !higher ~ 1
+    )
+  )
 
-ggplot(rate_data, aes(x = date_2021, y = rr, colour = year, size = year, group = year)) +
+rate_graph <- ggplot(rate_data, 
+                     aes(x = date_2021, y = rr, 
+                         colour = year, size = year, group = year)) +
   geom_line() +
-  geom_point(data = latest_data, size = 1, show.legend = FALSE) +
-  scale_size_manual(
-    values = c("CSPS 2020" = 0.5, "CSPS 2021" = 1.5)
-  ) +
+  geom_point(data = latest_graph_data, 
+             aes(size = as.character(point_size)), show.legend = FALSE) +
+  geom_label(data = latest_graph_data, 
+            aes(
+              x = label_x,
+              label = label,
+              hjust = label_hjust,
+              vjust = label_vjust),
+            size = 3.5,
+            fill = "#ffffff",
+            label.size = 0,
+            show.legend = FALSE) +
   scale_colour_manual(
     values = c("CSPS 2020" = "grey70", "CSPS 2021" = "#005abb")
+  ) +
+  scale_size_manual(
+    values = c("CSPS 2020" = 0.5, "CSPS 2021" = 1, `1` = 1, `2` = 2),
+    guide = guide_none()
   ) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1),
                      breaks = seq(0, 0.7, 0.1),
                      limits = c(0, 0.7)) +
-  scale_x_date(
-    breaks = as.Date("2021-09-27") + c(1, 7, 14, 21, 28, 35, 37),
-    minor_breaks = as.Date("2021-09-27") + 0:37,
-    labels = scales::date_format(format = "%a %d-%b"),
-    expand = expansion(add = 2)) +
+  scale_x_datetime(
+    breaks = as.POSIXct("2021-09-27") + 
+      c(1, 7, 14, 21, 28, 35, 37)*86400 + 
+      c(0, 0,  0,  0,  0, 3600, 3600),
+    labels = scales::label_date(format = "%a %d-%b", tz = "Europe/London"),
+    expand = expansion(add = 86400)) +
   theme_minimal() +
   theme(
+    text = element_text(size = 14, colour = "#000000"),
     axis.text.x = element_text(angle = 90),
     axis.title.y = element_blank(),
     axis.title.x = element_blank(),
@@ -70,4 +122,46 @@ ggplot(rate_data, aes(x = date_2021, y = rr, colour = year, size = year, group =
     legend.title = element_blank()
   )
 
+govukhugo::render_svg(
+  rate_graph, 800, 500,
+  alt_title = "Civil Service-level response rates over time", 
+  alt_desc = paste("This graph shows two lines respresenting the overall",
+                   "level response rates from the People Survey over time.",
+                   "The grey line shows the 2020 response rate and the blue",
+                   "line shows the 2021 response rate. A point is shown on",
+                   "each graph to represent the latest day in the 2021 survey",
+                   "and the equivalent day in the 2020 survey."),
+  caption = "alt_title"
+  )
+
 ```
+
+<hr class="govuk-section-break govuk-section-break--l">
+
+```{r rate-table}
+out_days <- day_compare %>%
+  filter(!is.na(rr_2021)) %>%
+  select(date_2021, day, rr_2021, rr_2020) %>%
+  arrange(desc(date_2021))
+
+govukhugo::govuk_datatable(
+  out_days,
+  col_names = c("Date", "Day", "2021 response rate", "2020 response rate"),
+  search = FALSE,
+  buttons = FALSE
+) %>%
+  DT::formatDate(1) %>%
+  DT::formatPercentage(columns = c(3, 4), digits = 1)
+```
+
+<hr class="govuk-section-break govuk-section-break--xl govuk-section-break--visible">
+
+## Notes
+1. The 2021 People Survey runs from 28 September to 3 November.
+1. Response rates provided here are for respondents to the online survey, figures do not include respondents using paper surveys.
+1. Headcount data is revised throughout the survey period and therefore affects response rate calculations. The headcount data used by this tracker is updated weekly, the last update was on `r format(hc_dt, "%d-%b-%Y")`.
+
+
+<hr class="govuk-section-break govuk-section-break--m">
+
+<span class="govuk-body-s">Page generated: `r format(Sys.time(), "%d-%b-%Y %H:%M:%S")`</span>
