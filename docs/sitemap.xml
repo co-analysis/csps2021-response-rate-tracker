@@ -3,19 +3,12 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://co-analysis.github.io/govuk-hugo-demo/</loc>
+    <loc>https://co-analysis.github.io/csps2021-response-rate-tracker/</loc>
   </url>
   
   <url>
-    <loc>https://co-analysis.github.io/govuk-hugo-demo/categories/</loc>
-  </url>
-  
-  <url>
-    <loc>https://co-analysis.github.io/govuk-hugo-demo/</loc>
-  </url>
-  
-  <url>
-    <loc>https://co-analysis.github.io/govuk-hugo-demo/tags/</loc>
+    <loc>https://co-analysis.github.io/csps2021-response-rate-tracker/rr_over_time/</loc>
+    <lastmod>2021-01-01T00:00:00+00:00</lastmod>
   </url>
   
 </urlset>
