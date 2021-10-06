@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = FALSE)
 suppressPackageStartupMessages(library(tidyverse))
 
 data_dir <- file.path(dirname(getwd()), "data")
+hc_dt <- as.POSIXct(readLines(file.path(data_dir, "headcount_timestamp.txt")))
 
 overall_rate_data <- readr::read_csv(
   file.path(data_dir,"total_responses_2021.csv")
@@ -60,7 +61,8 @@ govukhugo::govuk_datatable(org_out,
 1. Response rates provided here are for respondents to the online survey, figures do not include respondents using paper surveys.
 1. The acronyms provided in the code column of the table are internal codes used by the People Survey and may not relate to official acronyms used by the organisation.
 1. Where an organisation has less than 10 responses their response rate is suppressed, this is noted in the table with an asterisk (*) next to the organisation's name.
-1. The People Survey is not a source of official statistics on the size of Civil Service organisations, as such the headcounts used to calculate response rate are not provided in this table. Please refer to the [Civil Service Statistics](https://www.gov.uk/government/statistics/civil-service-statistics-2021) published by the Cabinet Office and the [Public Sector Employment statistics](https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/publicsectorpersonnel/bulletins/publicsectoremployment/previousReleases) published by the Office for National Statistics for the latest official statistics.
+1. Headcount data is revised throughout the survey period and therefore affects response rate calculations. The headcount data used by this tracker is updated weekly, the last update was on `r format(hc_dt, "%d-%b-%Y")`.
+1. The People Survey is not a source of official statistics on the size of Civil Service organisations, as such organisational headcounts and numbers of responses are not provided in this table. Please refer to the [Civil Service Statistics](https://www.gov.uk/government/statistics/civil-service-statistics-2021) published by the Cabinet Office and the [Public Sector Employment statistics](https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/publicsectorpersonnel/bulletins/publicsectoremployment/previousReleases) published by the Office for National Statistics for the latest official statistics.
 1. Some organisations invite a larger number of people working for their organisation than their official civil service headcount to complete their survey. For example, FCDO ask locally engaged staff working in overseas missions and MOD ask military staff working in civilian MOD roles to participate in the survey.
 
 <hr class="govuk-section-break govuk-section-break--m">
