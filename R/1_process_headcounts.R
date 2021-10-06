@@ -1,7 +1,20 @@
 library(tidyverse)
 
-# get hierarchy file
-raw_hierarchy <- readr::read_csv("R/data/raw_hierarchy/ukcivilservice_export_Thu Sep 30 13_53_58 UTC 2021.csv")
+# get hierarchy files
+hc_files <- dir("R/data/raw_hierarchy", full.names = TRUE)
+
+# get hierachy datetime
+hc_dt <- as.POSIXct(
+  gsub("^.*export_([A-Z].*)\\.csv", "\\1", hc_files),
+  format = "%a %b %d %H_%M_%S UTC %Y"
+)
+
+names(hc_dt) <- hc_files
+
+hc_dt <- sort(hc_dt, decreasing = TRUE)
+
+# import hierarchy file
+raw_hierarchy <- readr::read_csv(names(hc_dt[1]))
 
 # get org names
 org_names <- raw_hierarchy %>%
@@ -27,5 +40,17 @@ out_headcounts <- raw_hierarchy %>%
   filter(org != "All" & org != "AGD" & hc > 0) %>%
   full_join(org_names, by = "org")
 
+# compare overall sum
+if (sum(out_headcounts$hc, na.rm = TRUE) ==
+    sum(raw_hierarchy$ExpectedCount, na.rm = TRUE)) {
+  message("Headcount total matches")
+} else {
+  stop("Headcount total does not")
+}
+
+# Check if AGD still has headcount
+raw_hierarchy %>% filter(str_detect(ParentOrgCode, "AGD")) %>% select(UnitName, ExpectedCount)
+
 # write file
 write_excel_csv(out_headcounts, "R/data/headcounts.csv")
+write_lines(hc_dt[[1]], "R/data/headcount_timestamp.txt")
