@@ -32,3 +32,5 @@ params:
   product: "Civil Service People Survey 2021 Response Rates"
   builtby: "Cabinet Office Analysis & Insight"
   builtbyurl: https://www.github.com/co-analysis
+  accessibility: accessibility.md
+  privacy: privacy.md
