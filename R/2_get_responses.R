@@ -30,11 +30,24 @@ survey.fpath <- qualtRics:::download_qualtrics_export(fetch_url, requestID,
 tictoc::toc()
 
 # read the data and copy to the qualtrics_raw folder
-data <- qualtRics::read_survey(survey.fpath)
 file.copy(survey.fpath,
           file.path("R", "data", "qualtrics_raw",
                     paste0(format(Sys.time(), "%Y-%m-%d-%H%M%S"), "_",
                            basename(survey.fpath))))
+
+data_files <- sort(dir("R/data/qualtrics_raw/", full.names = TRUE),
+                   decreasing = TRUE)
+
+data <- qualtRics::read_survey(data_files[1])
+
+# check latest date
+if (max(as.Date(data$EndDate)) == Sys.Date()) {
+  message("Max date is today")
+} else if (max(as.Date(data$EndDate)) == Sys.Date() - 1) {
+  warning("Max date is yesterday")
+} else if (max(as.Date(data$EndDate)) < Sys.Date() - 1) {
+  stop("Max date is old")
+}
 
 headcounts <- readr::read_csv("R/data/headcounts.csv")
 
