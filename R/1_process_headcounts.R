@@ -48,9 +48,6 @@ if (sum(out_headcounts$hc, na.rm = TRUE) ==
   stop("Headcount total does not")
 }
 
-# Check if AGD still has headcount
-raw_hierarchy %>% filter(str_detect(ParentOrgCode, "AGD")) %>% select(UnitName, ExpectedCount)
-
 # write file
 write_excel_csv(out_headcounts, "R/data/headcounts.csv")
 write_lines(hc_dt[[1]], "R/data/headcount_timestamp.txt")
