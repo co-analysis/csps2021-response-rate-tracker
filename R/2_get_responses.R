@@ -35,7 +35,7 @@ file.copy(survey.fpath,
                     paste0(format(Sys.time(), "%Y-%m-%d-%H%M%S"), "_",
                            basename(survey.fpath))))
 
-data_files <- sort(dir("R/data/qualtrics_raw/", full.names = TRUE),
+data_files <- sort(dir("R/data/qualtrics_raw", full.names = TRUE),
                    decreasing = TRUE)
 
 data <- qualtRics::read_survey(data_files[1])
