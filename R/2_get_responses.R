@@ -43,8 +43,10 @@ data <- qualtRics::read_survey(data_files[1])
 # check latest date
 if (max(as.Date(data$EndDate)) == Sys.Date()) {
   message("Max date is today")
+  message("Max datetime is ", max(data$EndDate))
 } else if (max(as.Date(data$EndDate)) == Sys.Date() - 1) {
   warning("Max date is yesterday")
+  warning("Max datetime is ", max(data$EndDate))
 } else if (max(as.Date(data$EndDate)) < Sys.Date() - 1) {
   stop("Max date is old")
 }
