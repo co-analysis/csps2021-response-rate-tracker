@@ -28,6 +28,7 @@ tictoc::tic()
 survey.fpath <- qualtRics:::download_qualtrics_export(fetch_url, requestID,
                                           verbose = TRUE)
 tictoc::toc()
+beepr::beep(2)
 
 # read the data and copy to the qualtrics_raw folder
 file.copy(survey.fpath,
