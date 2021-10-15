@@ -43,9 +43,13 @@ out_headcounts <- raw_hierarchy %>%
 # compare overall sum
 if (sum(out_headcounts$hc, na.rm = TRUE) ==
     sum(raw_hierarchy$ExpectedCount, na.rm = TRUE)) {
-  message("Headcount total matches")
+  message("Headcount total matches, total is: ",
+          prettyNum(sum(out_headcounts$hc, na.rm = TRUE), big.mark = ","))
 } else {
-  stop("Headcount total does not")
+  stop("Headcount total does not!, Raw total is: ",
+       prettyNum(sum(raw_hierarchy$ExpectedCount, na.rm = TRUE), big.mark = ","),
+       ". Processed total is: ",
+       prettyNum(sum(out_headcounts$hc, na.rm = TRUE), big.mark = ","), ".")
 }
 
 # write file
