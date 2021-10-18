@@ -49,6 +49,7 @@ if (max(as.Date(data$EndDate)) == Sys.Date()) {
   warning("Max date is yesterday")
   warning("Max datetime is ", max(data$EndDate))
 } else if (max(as.Date(data$EndDate)) < Sys.Date() - 1) {
+  warning("Max datetime is ", max(data$EndDate))
   stop("Max date is old")
 }
 
