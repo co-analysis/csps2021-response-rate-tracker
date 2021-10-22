@@ -52,6 +52,58 @@ if (sum(out_headcounts$hc, na.rm = TRUE) ==
        prettyNum(sum(out_headcounts$hc, na.rm = TRUE), big.mark = ","), ".")
 }
 
+# get families
+org_families <- raw_hierarchy %>%
+  filter(str_detect(ParentOrgCode, "\\d+", negate = TRUE) &
+           ParentOrgCode != "All") %>%
+  select(ParentOrgCode, UnitName, UnitID) %>%
+  transmute(
+    parent_code = toupper(ParentOrgCode),
+    parent_OHU = UnitID,
+    parent_name = str_replace(
+      UnitName,
+      "^\\w{2,7}\\s(.*)\\s(\\(Corporate Report\\)|Corporate Report.*)$",
+      "\\1")
+  )
+
+# get org with family
+org_with_family <- raw_hierarchy %>%
+  filter(str_detect(ParentOrgCode, "0000$") & ParentOrgCode != "HMPPS0000") %>%
+  select(ParentOrgCode, UnitID, parent_OHU = ParentUnitID) %>%
+  left_join(org_families, by = "parent_OHU") %>%
+  mutate(
+    parent_code = if_else(
+      parent_OHU == "OHU_1MNiNxNPdB6Ni7k",
+      "MOJ",
+      parent_code
+    ),
+    parent_name = if_else(
+      parent_OHU == "OHU_1MNiNxNPdB6Ni7k",
+      "Ministry of Justice",
+      parent_name
+    )
+  )
+
+# get multi-org families
+family_counts <- org_with_family %>%
+  count(parent_code, parent_name) %>%
+  filter(n > 1)
+
+# output family groups
+org_groups <- org_with_family %>%
+  transmute(
+    org = str_remove(toupper(ParentOrgCode), "\\d+"),
+    org_group = if_else(
+      parent_code %in% family_counts$parent_code,
+      parent_name,
+      NA_character_
+    )
+  )
+
+# merge headcounts
+out_headcounts_with_group <- out_headcounts %>%
+  left_join(org_groups, by = "org")
+
 # write file
-write_excel_csv(out_headcounts, "R/data/headcounts.csv")
+write_excel_csv(out_headcounts_with_group, "R/data/headcounts.csv")
 write_lines(hc_dt[[1]], "R/data/headcount_timestamp.txt")

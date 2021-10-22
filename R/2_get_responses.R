@@ -68,7 +68,15 @@ rr_org <- data %>%
   mutate(org = str_remove_all(OUcode, "\\d+")) %>%
   count(org) %>%
   full_join(headcounts, by = "org") %>%
-  mutate(rr = n/hc)
+  mutate(
+    rr = n/hc,
+    org_group = if_else(
+      is.na(org_group),
+      name,
+      org_group
+    ),
+    across(c(name, org_group), ~str_replace(., "&", "and"))
+  )
 
 # create total count
 rr_time <- data %>%
