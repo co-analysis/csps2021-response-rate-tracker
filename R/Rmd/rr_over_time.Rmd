@@ -125,7 +125,7 @@ rate_graph <- ggplot(rate_data,
 govukhugo::render_svg(
   rate_graph, 800, 500,
   alt_title = "Civil Service-level response rates over time", 
-  alt_desc = paste("This graph shows two lines respresenting the overall",
+  alt_desc = paste("This graph shows two lines representing the overall",
                    "level response rates from the People Survey over time.",
                    "The grey line shows the 2020 response rate and the blue",
                    "line shows the 2021 response rate. A point is shown on",
