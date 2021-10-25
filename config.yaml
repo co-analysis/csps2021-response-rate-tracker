@@ -28,6 +28,7 @@ markup:
 
 params:
   govuk: false
+  noindex: true
   logotext: CSPS21
   product: "Civil Service People Survey 2021 Response Rates"
   builtby: "Cabinet Office Analysis & Insight"
