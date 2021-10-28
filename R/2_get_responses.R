@@ -5,15 +5,29 @@ csps2021_id <- qualtRics::all_surveys() %>%
   pull(id)
 
 # generate url to fetch the data
-fetch_url <- qualtRics:::generate_url(query = "fetchsurvey", surveyID = csps2021_id)
+fetch_url <- qualtRics:::generate_url(
+  query = "fetchsurvey",
+  surveyID = csps2021_id
+)
 
 # generate the paylod
 # need to include two questions in order to get toJSON to format correctly
-raw_payload <- jsonlite::toJSON(list("useLabels" = TRUE, "questionIds" = c("QID4", "QID5"), "embeddedDataIds" = c("ParentOrgCode", "UnitLink"), "surveyMetadataIds" = c("endDate", "finished"), "format" = "csv"), auto_unbox = TRUE)
+raw_payload <- jsonlite::toJSON(
+  list(
+    "useLabels" = TRUE,
+    "questionIds" = c("QID4", "QID5"),
+    "embeddedDataIds" = c("ParentOrgCode", "UnitLink"),
+    "surveyMetadataIds" = c("endDate", "finished"),
+    "format" = "csv"
+  ),
+  auto_unbox = TRUE
+)
 
 # send the request
 tictoc::tic()
-res <- qualtRics:::qualtrics_api_request("POST", url = fetch_url, body = raw_payload)
+res <- qualtRics:::qualtrics_api_request(
+  "POST", url = fetch_url, body = raw_payload
+)
 tictoc::toc()
 
 # get the request ID
@@ -25,8 +39,9 @@ if (is.null(res$result$progressId)) {
 
 # download the data produced by the request
 tictoc::tic()
-survey.fpath <- qualtRics:::download_qualtrics_export(fetch_url, requestID,
-                                          verbose = TRUE)
+survey.fpath <- qualtRics:::download_qualtrics_export(
+  fetch_url, requestID, verbose = TRUE
+)
 tictoc::toc()
 beepr::beep(2)
 
