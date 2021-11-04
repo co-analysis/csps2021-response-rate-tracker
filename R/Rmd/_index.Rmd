@@ -61,6 +61,15 @@ unstrap <- function(x) {
 
 ```
 
+<div class="govuk-notification-banner" role="region" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
+<div class="govuk-notification-banner__header">
+<h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">Survey closed</h2>
+</div>
+<div class="govuk-notification-banner__content">
+<p class="govuk-notification-banner__heading">The survey has now closed and responses are being processed, final response rates will be confirmed later in November.</p>
+</div>
+</div>
+
 <span class="govuk-body-l">As of 23:59 on `r format(latest_data$end_date, "%d-%b-%Y")` there have been **`r prettyNum(latest_data$cumulative, big.mark=",")`** responses to the 2021 Civil Service People Survey, this is an overall response rate of **`r scales::percent(latest_data$rr, accuracy = 0.1)`**.</span>
 
 <hr class="govuk-section-break govuk-section-break--l">

@@ -27,7 +27,8 @@ day_compare <- tibble::tibble(
 
 latest_day <- day_compare %>%
   drop_na(rr_2021) %>%
-  filter(day == max(day))
+  filter(day == max(day)) %>%
+  mutate(rr_2020 = if_else(is.na(rr_2020), max(day_compare$rr_2020, na.rm = TRUE), rr_2020))
 
 ```
 
