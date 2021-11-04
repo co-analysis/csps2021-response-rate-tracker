@@ -32,6 +32,15 @@ latest_day <- day_compare %>%
 
 ```
 
+<div class="govuk-notification-banner" role="region" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
+<div class="govuk-notification-banner__header">
+<h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">Survey closed</h2>
+</div>
+<div class="govuk-notification-banner__content">
+<p class="govuk-notification-banner__heading">The survey has now closed and responses are being processed, final response rates will be confirmed later in November.</p>
+</div>
+</div>
+
 `r format(latest_day$date_2021, "%A %d %B %Y")` was day `r latest_day$day` of the 2021 Civil Service People Survey, as at 23:59 on `r format(latest_day$date_2021, "%d-%b-%Y")` the overall response rate was `r scales::percent(latest_day$rr_2021, accuracy = 0.1)`. On the equivalent day in the 2020 survey the response rate was `r scales::percent(latest_day$rr_2020, accuracy = 0.1)`. The graph and table below shows the overall Civil Service response rate over time for 2020 and 2021.
 
 Please note that rates for a given fieldwork day in the two years might not be directly comparable for a number of reasons, including: different start dates for the survey overall; different start dates in different departments and agencies; and, the relative position of weekends. The 2021 survey will also run for two additional working days compared to the 2020 survey.
