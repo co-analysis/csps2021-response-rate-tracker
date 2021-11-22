@@ -10,16 +10,19 @@ knitr::opts_chunk$set(echo = FALSE)
 suppressPackageStartupMessages(library(tidyverse))
 
 data_dir <- file.path(dirname(getwd()), "data")
-hc_dt <- as.POSIXct(readLines(file.path(data_dir, "headcount_timestamp.txt")))
 
 csps2021_rr <- readr::read_csv(file.path(data_dir, "total_responses_2021.csv")) %>%
-  rename(date_2021 = end_date)
+  rename(date_2021 = end_date) %>%
+  mutate(date_2021 = if_else(is.na(date_2021), 
+                             as.Date("2021-11-04"), 
+                             date_2021)
+         )
 
 csps2020_rr <- readr::read_csv(file.path(data_dir, "total_responses_2020.csv"))
 
 day_compare <- tibble::tibble(
-    day = 1:37,
-    date_2021 = as.Date("2021-09-28") + 0:36
+    day = c(1:37, 99),
+    date_2021 = c(as.Date("2021-09-28") + 0:37)
   ) %>% 
   left_join(csps2021_rr, by = "date_2021") %>%
   left_join(csps2020_rr, by = "day") %>%
@@ -32,18 +35,9 @@ latest_day <- day_compare %>%
 
 ```
 
-<div class="govuk-notification-banner" role="region" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
-<div class="govuk-notification-banner__header">
-<h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">Survey closed</h2>
-</div>
-<div class="govuk-notification-banner__content">
-<p class="govuk-notification-banner__heading">The survey has now closed and responses are being processed, final response rates will be confirmed later in November.</p>
-</div>
-</div>
+The Civil Service People Survey 2021 has closed and final response rates have been confirmed, the final response rate is `r scales::percent(latest_day$rr_2021, accuracy = 0.1)`, The final response rate of the 2020 survey was `r scales::percent(latest_day$rr_2020, accuracy = 0.1)`. The graph and table below shows the overall Civil Service response rate over time for 2020 and 2021.
 
-`r format(latest_day$date_2021, "%A %d %B %Y")` was day `r latest_day$day` of the 2021 Civil Service People Survey, as at 23:59 on `r format(latest_day$date_2021, "%d-%b-%Y")` the overall response rate was `r scales::percent(latest_day$rr_2021, accuracy = 0.1)`. On the equivalent day in the 2020 survey the response rate was `r scales::percent(latest_day$rr_2020, accuracy = 0.1)`. The graph and table below shows the overall Civil Service response rate over time for 2020 and 2021.
-
-Please note that rates for a given fieldwork day in the two years might not be directly comparable for a number of reasons, including: different start dates for the survey overall; different start dates in different departments and agencies; and, the relative position of weekends. The 2021 survey will also run for two additional working days compared to the 2020 survey.
+Please note that rates for a given fieldwork day in the two years might not be directly comparable for a number of reasons, including: different start dates for the survey overall; different start dates in different departments and agencies; and, the relative position of weekends. The 2021 survey ran for two additional working days compared to the 2020 survey.
 
 
 ```{r rate-graph, warning=FALSE}
@@ -53,36 +47,14 @@ rate_data <- day_compare %>%
   mutate(
     year = factor(paste("CSPS", str_remove_all(year, "\\D+")), 
                   levels = c("CSPS 2020", "CSPS 2021"), ordered = TRUE),
-    date_2021 = as.POSIXct(date_2021))
+    date_2021 = as.POSIXct(date_2021)) %>%
+  drop_na(rr)
 
-latest_2020 <- day_compare %>%
-  select(day, date_2021, rr_2020) %>%
-  drop_na() %>%
-  mutate(year = "CSPS 2020") %>%
-  rename(rr = rr_2020)
-
-latest_2021 <- day_compare %>%
-  select(day, date_2021, rr_2021) %>%
-  drop_na() %>%
-  filter(day == max(day)) %>%
-  mutate(year = "CSPS 2021") %>%
-  rename(rr = rr_2021)
-
-if (max(latest_2020$day) > max(latest_2021$day)) {
-  latest_2020 <- latest_2020 %>% 
-    filter(day == max(latest_2021$day))
-} else {
-  latest_2020 <- latest_2020 %>% 
-    filter(day == max(day))
-}
-
-if (latest_2021$rr > latest_2020$rr) {
-  latest_data <- bind_rows(latest_2020, latest_2021) %>%
-    mutate(higher = TRUE)
-} else {
-  latest_data <- bind_rows(latest_2020, latest_2021) %>%
-    mutate(higher = FALSE)
-}
+latest_data <- latest_day %>%
+  mutate(higher = rr_2021 > rr_2020) %>%
+  select(date_2021, rr_2021, rr_2020, higher) %>%
+  pivot_longer(cols = c(-date_2021, -higher), names_to = "year", values_to = "rr") %>%
+  mutate(year = str_replace(year, "rr_", "CSPS "))
 
 latest_graph_data <- latest_data %>%
   mutate(
@@ -90,7 +62,7 @@ latest_graph_data <- latest_data %>%
                   levels = c("CSPS 2020", "CSPS 2021"), ordered = TRUE),
     date_2021 = as.POSIXct(date_2021),
     point_size = if_else(year == "CSPS 2021", 2, 1),
-    label = paste0(year, "\nDay ", day, ": ", 
+    label = paste0(year, "\nFinal RR: ", 
                    scales::percent(rr, accuracy = 0.1)),
     label_x = case_when(
       year == "CSPS 2020" & higher ~ as.POSIXct(date_2021 + (6 * 60 * 60)),
@@ -174,9 +146,16 @@ govukhugo::render_svg(
 
 ```{r rate-table}
 out_days <- day_compare %>%
-  filter(!is.na(rr_2021)) %>%
   select(date_2021, day, rr_2021, rr_2020) %>%
-  arrange(desc(date_2021))
+  arrange(-day) %>%
+  mutate(
+    date_2021 = if_else(
+      day == 99,
+      "Final response rate",
+      format(date_2021, "%a %d %b %Y")
+    )
+  )
+  
 
 govukhugo::govuk_datatable(
   out_days,
@@ -184,7 +163,6 @@ govukhugo::govuk_datatable(
   search = FALSE,
   buttons = FALSE
 ) %>%
-  DT::formatDate(1) %>%
   DT::formatPercentage(columns = c(3, 4), digits = 1)
 ```
 
@@ -192,9 +170,8 @@ govukhugo::govuk_datatable(
 
 ## Notes
 1. The 2021 People Survey runs from 28 September to 3 November.
-1. Response rates provided here are for respondents to the online survey, figures do not include respondents using paper surveys.
-1. Headcount data is revised throughout the survey period and therefore affects response rate calculations. The headcount data used by this tracker is updated weekly, the last update was on `r format(hc_dt, "%d-%b-%Y")`.
-
+1. Final response rates combine online and paper survey responses and after validation checks have been completed. Only online responses have timestamps, paper surveys are therefore only included in the calculation of the final response rate.
+1. The final response rate has been given the notional value of 99 in the day column for sorting purposes.
 
 <hr class="govuk-section-break govuk-section-break--m">
 

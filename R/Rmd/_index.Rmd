@@ -1,5 +1,5 @@
 ---
-title: "Overall CSPS 2021 Response Rates"
+title: "Final CSPS 2021 Response Rates"
 date: Sys.Date()
 weight: 100
 summary: "Index page"
@@ -10,27 +10,24 @@ knitr::opts_chunk$set(echo = FALSE)
 suppressPackageStartupMessages(library(tidyverse))
 
 data_dir <- file.path(dirname(getwd()), "data")
-hc_dt <- as.POSIXct(readLines(file.path(data_dir, "headcount_timestamp.txt")))
 
 overall_rate_data <- readr::read_csv(
   file.path(data_dir,"total_responses_2021.csv")
 )
 
 latest_data <- overall_rate_data %>%
-   filter(end_date == max(end_date))
-
-org_files <- dir(file.path(data_dir, "org_response_counts"), 
-                 full.names = TRUE) %>%
-  sort(decreasing = TRUE)
+   filter(is.na(end_date))
 
 org_data <- readr::read_csv(
-  org_files[1]
+  file.path(data_dir, "final_org_rates.csv")
 )
 
 org_out <- org_data %>%
   select(org_group, org, name, n, rr) %>%
-  mutate(across(c(n, rr), ~if_else(n < 10, NA_real_, .)),
-         name = if_else(is.na(n), paste0(name, "*"), name)) %>%
+  mutate(
+    across(c(n, rr), ~if_else(n < 10, NA_real_, .)),
+    rr = if_else(rr > 1, 1, rr),
+    name = if_else(is.na(n), paste0(name, "*"), name)) %>%
   arrange(desc(rr)) %>%
   select(-n)
 
@@ -61,22 +58,13 @@ unstrap <- function(x) {
 
 ```
 
-<div class="govuk-notification-banner" role="region" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
-<div class="govuk-notification-banner__header">
-<h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">Survey closed</h2>
-</div>
-<div class="govuk-notification-banner__content">
-<p class="govuk-notification-banner__heading">The survey has now closed and responses are being processed, final response rates will be confirmed later in November.</p>
-</div>
-</div>
-
-<span class="govuk-body-l">As of 23:59 on `r format(latest_data$end_date, "%d-%b-%Y")` there have been **`r prettyNum(latest_data$cumulative, big.mark=",")`** responses to the 2021 Civil Service People Survey, this is an overall response rate of **`r scales::percent(latest_data$rr, accuracy = 0.1)`**.</span>
+<span class="govuk-body-l">The Civil Service People Survey 2021 has closed and final response rates have been confirmed. In total there were **`r prettyNum(latest_data$cumulative, big.mark=",")`** responses, this is an overall response rate of **`r scales::percent(latest_data$rr, accuracy = 0.1)`**.</span>
 
 <hr class="govuk-section-break govuk-section-break--l">
 
-## Latest response rate by organisation
+## Final response rate by organisation
 
-The following table shows the  response rate for each of the 101 participating departments and agencies as at 23:59 on `r format(latest_data$end_date, "%d-%b-%Y")`, the median response rate across participating organisations is `r scales::percent(median(org_out$rr, na.rm = TRUE), accuracy = 0.1)`.
+The following table shows the final response rate for each of the 101 participating departments and agencies, the median response rate across participating organisations is `r scales::percent(median(org_out$rr, na.rm = TRUE), accuracy = 0.1)`.
 
 You can sort the table by clicking on a column heading and use the filter controls to select a departmental grouping or select specific organisations.
 
@@ -114,11 +102,9 @@ govukhugo::govuk_datatable(sd_org_out,
 <hr class="govuk-section-break govuk-section-break--xl govuk-section-break--visible">
 
 ## Notes
-1. The 2021 People Survey runs from 28 September to 3 November.
-1. Response rates provided here are for respondents to the online survey, figures do not include respondents using paper surveys.
+1. The 2021 People Survey ran from 28 September to 3 November.
+1. Final response rates include paper survey respondents, during the fieldwork period only online responses were shown in this tool.
 1. The acronyms provided in the code column of the table are internal codes used by the People Survey and may not relate to official acronyms used by the organisation.
-1. Where an organisation has less than 10 responses their response rate is suppressed, this is noted in the table with an asterisk (*) next to the organisation's name.
-1. Headcount data is revised throughout the survey period and therefore affects response rate calculations. The headcount data used by this tracker is updated weekly, the last update was on `r format(hc_dt, "%d-%b-%Y")`.
 1. The People Survey is not a source of official statistics on the size of Civil Service organisations, as such organisational headcounts and numbers of responses are not provided in this table. Please refer to the [Civil Service Statistics](https://www.gov.uk/government/statistics/civil-service-statistics-2021) published by the Cabinet Office and the [Public Sector Employment statistics](https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/publicsectorpersonnel/bulletins/publicsectoremployment/previousReleases) published by the Office for National Statistics for the latest official statistics.
 1. Some organisations invite a larger number of people working for their organisation than their official civil service headcount to complete their survey. For example, FCDO ask locally engaged staff working in overseas missions and MOD ask military staff working in civilian MOD roles to participate in the survey.
 
