@@ -144,6 +144,10 @@ govukhugo::render_svg(
 
 <hr class="govuk-section-break govuk-section-break--l">
 
+::::{.govuk-grid-row .data-card}
+
+:::{.govuk-grid-column-full}
+
 ```{r rate-table}
 out_days <- day_compare %>%
   select(date_2021, day, rr_2021, rr_2020) %>%
@@ -165,6 +169,9 @@ govukhugo::govuk_datatable(
 ) %>%
   DT::formatPercentage(columns = c(3, 4), digits = 1)
 ```
+
+:::
+::::
 
 <hr class="govuk-section-break govuk-section-break--xl govuk-section-break--visible">
 

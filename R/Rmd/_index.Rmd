@@ -68,7 +68,7 @@ The following table shows the final response rate for each of the 101 participat
 
 You can sort the table by clicking on a column heading and use the filter controls to select a departmental grouping or select specific organisations.
 
-::::{.govuk-grid-row .data-row}
+::::{.govuk-grid-row .data-card}
 
 :::{.govuk-grid-column-one-quarter .filter-controls .govuk-body-s}
 
